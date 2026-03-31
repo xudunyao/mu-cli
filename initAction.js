@@ -88,7 +88,8 @@ const initAction = async (name, option = {}) => {
   } else {
     const choices = templates.map(item => item.name);
     const answer = await inquirerChoose('请选择项目模板:', choices,'list');
-    repository = answer.choose;
+    const template = templates.find((item) => item.name === answer.choose)
+    repository = template.value;
   }
 
   try {
