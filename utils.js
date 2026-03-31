@@ -1,7 +1,6 @@
 import chalk from "chalk";
 import fs from "fs-extra";
 import figlet from 'figlet';
-import inquirer from 'inquirer'
 import ora from "ora";
 import path from "path";
 export function isUnicodeSupported() {
@@ -38,15 +37,6 @@ export function printBanner(){
         })
       )
   );
-}
-
-export const inquirerConfirm = async (message) => { 
-  const answer = await inquirer.prompt({
-    name: 'confirm',
-    type: 'confirm',
-    message
-  });
-  return answer
 }
 
 export async function removeDir(dir) {
