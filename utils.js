@@ -1,5 +1,9 @@
 import chalk from "chalk";
+import fs from "fs-extra";
 import figlet from 'figlet';
+import inquirer from 'inquirer'
+import ora from "ora";
+import path from "path";
 export function isUnicodeSupported() {
   // 操作系统平台是否为 win32（Windows）
   if (process.platform !== "win32") {
@@ -34,4 +38,38 @@ export function printBanner(){
         })
       )
   );
+}
+
+export const inquirerConfirm = async (message) => { 
+  const answer = await inquirer.prompt({
+    name: 'confirm',
+    type: 'confirm',
+    message
+  });
+  return answer
+}
+
+export async function removeDir(dir) {
+  // 调用时再解析 cwd，避免进程切换目录后仍使用旧路径。
+  const targetPath = path.isAbsolute(dir) ? dir : path.resolve(process.cwd(), dir);
+  const spinner = ora({
+    text: `正在删除文件夹${chalk.cyan(dir)}`,
+    color: 'yellow',
+  }).start();
+
+  try {
+    if (!await fs.pathExists(targetPath)) {
+      spinner.info(chalk.yellowBright(`文件夹${chalk.cyan(dir)}不存在，跳过删除`));
+      return true;
+    }
+
+    await fs.remove(targetPath);
+    spinner.succeed(chalk.greenBright(`删除文件夹${chalk.cyan(dir)}成功`));
+    return true;
+  }
+  catch (err) {
+    spinner.fail(chalk.redBright(`删除文件夹${chalk.cyan(dir)}失败`));
+    console.error(err);
+    return false;
+  }
 }

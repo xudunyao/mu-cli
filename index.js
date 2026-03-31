@@ -7,7 +7,7 @@ import { templates } from './constants.js';
 import { readFile } from 'fs/promises';
 import logSymbols from './logSymbols.js';
 import initAction from './initAction.js';
-import { printBanner } from './utils.js';
+import { printBanner,inquirerConfirm } from './utils.js';
 
 // 从 package.json 动态读取版本号，避免手动维护重复版本信息。
 const pkg = JSON.parse(

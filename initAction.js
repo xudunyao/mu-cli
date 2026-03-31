@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import logSymbols from './logSymbols.js';
 import clone from './clone.js';
 import { templates } from './constants.js';
+import { inquirerConfirm,removeDir } from './utils.js';
 
 const RESERVED_NAMES = new Set([
   'con', 'prn', 'aux', 'nul',
@@ -54,23 +55,15 @@ const initAction = async (name, option = {}) => {
   }
   const projectName = name.trim();
   const targetPath = resolve(process.cwd(), projectName);
-  if (existsSync(targetPath)) {
-    if (!option.force) {
-      console.log(logSymbols.error, `目录 "${projectName}" 已存在，可使用 --force 强制覆盖。`);
+  if (existsSync(targetPath) && !option.force) {
+    const answer = await inquirerConfirm('目录已存在，是否强制覆盖？');
+    if (!answer.confirm) {
+      console.log(logSymbols.error, '目录已存在，请重新输入项目名称');
       return;
     }
-    shell.rm('-rf', targetPath);
+    await removeDir(targetPath)
+  }else if (existsSync(targetPath) && option.force) {
+    await removeDir(targetPath)
   }
-  const selectedTemplate = templates.find((item) => item.name === option.template) ?? templates[0];
-  if (!selectedTemplate) {
-    console.log(logSymbols.error, '模板列表为空，请检查 templates 配置。');
-    return;
-  }
-  if (option.template && !templates.some((item) => item.name === option.template)) {
-    const templateNames = templates.map((item) => item.name).join(', ');
-    console.log(logSymbols.error, `模板 "${option.template}" 不存在，可选模板：${templateNames}`);
-    return;
-  }
-  await clone(selectedTemplate.value, projectName);
 };
 export default initAction;
