@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "mu-cli": "./index.js"
+    "dyao-cli": "./index.js"
   },
   "repository": {
     "type": "git",
