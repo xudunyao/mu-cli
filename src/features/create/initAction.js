@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
 import shell from 'shelljs';
+import ora from 'ora';
 import { loadTemplates, messages } from '../templates/config.js';
 import {
   inquirerChoose,
@@ -99,8 +100,10 @@ const initAction = async (name, option = {}) => {
     }
   }
 
+  const spinner = ora('获取模版信息中......').start();
   let repository = '';
   const templates = await loadTemplates();
+  spinner.succeed('模版信息获取完成');
   if (option.template) {
     const template = templates.find((item) => item.name === option.template);
     if (!template) {
