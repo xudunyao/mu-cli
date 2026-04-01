@@ -1,25 +1,50 @@
-import shell from 'shelljs';
 import chalk from 'chalk';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
-import logSymbols from './logSymbols.js';
+import shell from 'shelljs';
+import { loadTemplates, messages } from '../templates/config.js';
+import {
+  inquirerChoose,
+  inquirerConfirm,
+  inquirerInputs
+} from './interactive.js';
 import clone from './clone.js';
-import { templates } from './constants.js';
-import { inquirerConfirm, inquirerChoose } from './interactive.js';
-import { removeDir } from './utils.js';
+import logSymbols from '../../shared/logSymbols.js';
+import {
+  changePackageJson,
+  npmInstall,
+  removeDir
+} from '../../shared/projectUtils.js';
 
 const RESERVED_NAMES = new Set([
-  'con', 'prn', 'aux', 'nul',
-  'com1', 'com2', 'com3', 'com4', 'com5', 'com6', 'com7', 'com8', 'com9',
-  'lpt1', 'lpt2', 'lpt3', 'lpt4', 'lpt5', 'lpt6', 'lpt7', 'lpt8', 'lpt9',
+  'con',
+  'prn',
+  'aux',
+  'nul',
+  'com1',
+  'com2',
+  'com3',
+  'com4',
+  'com5',
+  'com6',
+  'com7',
+  'com8',
+  'com9',
+  'lpt1',
+  'lpt2',
+  'lpt3',
+  'lpt4',
+  'lpt5',
+  'lpt6',
+  'lpt7',
+  'lpt8',
+  'lpt9',
   'node_modules'
 ]);
 
 function validateProjectName(name) {
   const projectName = name?.trim();
-  if (!projectName) {
-    return '项目名称不能为空。';
-  }
+  if (!projectName) return '项目名称不能为空。';
   if (projectName.length < 2 || projectName.length > 50) {
     return '项目名称长度需在 2 到 50 个字符之间。';
   }
@@ -29,7 +54,6 @@ function validateProjectName(name) {
   if (!/^[a-z]/.test(projectName)) {
     return '项目名称必须以小写字母开头。';
   }
-  // 仅允许小写字母、数字、中划线和下划线。
   if (!/^[a-z0-9_-]+$/.test(projectName)) {
     return '项目名称仅支持小写字母、数字、中划线(-)和下划线(_)。';
   }
@@ -76,7 +100,7 @@ const initAction = async (name, option = {}) => {
   }
 
   let repository = '';
-  // 支持命令行指定模板；未指定时交互选择。
+  const templates = await loadTemplates();
   if (option.template) {
     const template = templates.find((item) => item.name === option.template);
     if (!template) {
@@ -86,17 +110,24 @@ const initAction = async (name, option = {}) => {
     }
     repository = template.value;
   } else {
-    const choices = templates.map(item => item.name);
-    const answer = await inquirerChoose('请选择项目模板:', choices,'list');
-    const template = templates.find((item) => item.name === answer.choose)
+    const choices = templates.map((item) => item.name);
+    const answer = await inquirerChoose('请选择项目模板:', choices, 'list');
+    const template = templates.find((item) => item.name === answer.choose);
     repository = template.value;
   }
 
   try {
     await clone(repository, projectName);
   } catch (err) {
-    console.log(logSymbols.error, err);
+    console.log(logSymbols.error, `创建项目失败: ${err}`);
     shell.exit(1);
   }
+
+  if (!option.ignore) {
+    const answers = await inquirerInputs(messages);
+    await changePackageJson(name, answers);
+  }
+  npmInstall(projectName);
 };
+
 export default initAction;
